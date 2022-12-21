@@ -1,7 +1,7 @@
 require("dotenv").config();
 import "reflect-metadata";
 import express from "express";
-import { createConnection } from "typeorm";
+import { DataSource } from "typeorm";
 import { User } from "./entities/User";
 import { Post } from "./entities/Post";
 import { ApolloServer } from "apollo-server-express/dist/ApolloServer";
@@ -17,7 +17,17 @@ import { Context } from "./types/Context";
 import { PostResolver } from "./resolvers/post";
 
 const main = async () => {
-    await createConnection({
+    // await createConnection({
+    //     type: "postgres",
+    //     database: "reddit",
+    //     username: process.env.DB_USERNAME_DEV,
+    //     password: process.env.DB_PASSWORD_DEV,
+    //     logging: true,
+    //     synchronize: true, // Check database
+    //     entities: [User, Post],
+    // });
+
+    const AppDataSource = new DataSource({
         type: "postgres",
         database: "reddit",
         username: process.env.DB_USERNAME_DEV,
@@ -25,7 +35,15 @@ const main = async () => {
         logging: true,
         synchronize: true, // Check database
         entities: [User, Post],
-    });
+    })
+    
+    AppDataSource.initialize()
+        .then(() => {
+            console.log("Data Source has been initialized!")
+        })
+        .catch((err) => {
+            console.error("Error during Data Source initialization", err)
+        })
 
     const app = express();
 

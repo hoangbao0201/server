@@ -1,13 +1,14 @@
 import { PostMutationResponse } from "../types/PostMutationResponse";
-import { Arg, Ctx, ID, Mutation, Query, Resolver } from "type-graphql";
+import { Arg, ID, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
 import { CreatePostInput } from "../types/CreatePostInput";
 import { Post } from "../entities/Post";
 import { UpdatePostInput } from "../types/UpdatePostInput";
-import { Context } from "../types/Context";
+import { checkAuth } from "../middleware/checkAuth";
 
 @Resolver()
 export class PostResolver {
     @Mutation((_return) => PostMutationResponse)
+    @UseMiddleware(checkAuth)
     async createPost(
         @Arg("createPostInput") { title, text }: CreatePostInput
     ): Promise<PostMutationResponse> {
@@ -47,6 +48,7 @@ export class PostResolver {
     }
 
     @Mutation(_return => PostMutationResponse, { nullable: true })
+    @UseMiddleware(checkAuth)
     async updatePost(
         @Arg('updatePostInput') { id, title, text } : UpdatePostInput
     ): Promise<PostMutationResponse> {
@@ -82,13 +84,11 @@ export class PostResolver {
     }
 
     @Mutation(_return => PostMutationResponse)
+    @UseMiddleware(checkAuth)
     async deletePost(
         @Arg('id', _type => ID) id : number,
-        @Ctx() { req } : Context
     ): Promise<PostMutationResponse> {
         try {
-
-            console.log("REQUEST.SESSION: ", req.session)
 
             const existingPost = await Post.findOne({ where: { id: id } });
             if(!existingPost) {
